@@ -3,61 +3,44 @@ import DeleteBtn from "../components/DeleteBtn";
 import Jumbotron from "../components/Jumbotron";
 import API from "../utils/API";
 import { Link } from "react-router-dom";
-import { Col, Row, Container } from "../components/Grid";
+import { Col, Row, Container } from "react-bootstrap";
 import { List, ListItem } from "../components/List";
 import { Input, TextArea, FormBtn } from "../components/Form";
 
+
 function Search() {
   // Setting our component's initial state
-  const [books, setBooks] = useState([])
+  const [reslist, setReslist] = useState({})
   const [formObject, setFormObject] = useState({})
+  const [book, setBook] = useState({})
 
-  // Load all books and store them with setBooks
-  useEffect(() => {
-    loadBooks()
-  }, [])
 
-  // Loads all books and sets them to books
-  function loadBooks() {
-    API.getBooks()
-      .then(res =>
-        setBooks(res.data)
-      )
-      .catch(err => console.log(err));
-  };
 
-  // Deletes a book from the database with a given id, then reloads books from the db
-  function deleteBook(id) {
-    API.deleteBook(id)
-      .then(res => loadBooks())
-      .catch(err => console.log(err));
-  }
 
-  // Handles updating component state when the user types into the input field
+
   function handleInputChange(event) {
     const { name, value } = event.target;
     setFormObject({...formObject, [name]: value})
   };
 
-  // When the form is submitted, use the API.saveBook method to save the book data
-  // Then reload books from the database
+
   function handleFormSubmit(event) {
     event.preventDefault();
-    if (formObject.title && formObject.author) {
-      API.saveBook({
-        title: formObject.title,
-        author: formObject.author,
-        synopsis: formObject.synopsis
-      })
-        .then(res => loadBooks())
+    const title = formObject.title;
+
+
+      API.googleBooks(title)
+        .then(res => {
+          console.log("res", res);
+          setReslist(res.data.items)
+        })
         .catch(err => console.log(err));
     }
-  };
 
     return (
       <Container fluid>
         <Row>
-          <Col size="md-6">
+          <Col>
             <Jumbotron>
               <h1>Google Book Search</h1>
             </Jumbotron>
@@ -67,40 +50,74 @@ function Search() {
                 name="title"
                 placeholder="Title (required)"
               />
-              {/* <Input
-                onChange={handleInputChange}
-                name="author"
-                placeholder="Author (required)"
-              />
-              <TextArea
-                onChange={handleInputChange}
-                name="synopsis"
-                placeholder="Synopsis (Optional)"
-              /> */}
               <FormBtn
-                disabled={!(formObject.author && formObject.title)}
+                disabled={!(formObject.title)}
                 onClick={handleFormSubmit}
               >
                 Submit Book
               </FormBtn>
             </form>
-          </Col>
-          <Col>
+
             <Jumbotron>
               <h1>Books On My List</h1>
             </Jumbotron>
-            {books.length ? (
+            {reslist.length ? (
               <List>
-                {books.map(book => (
-                  <ListItem key={book._id}>
-                    <Link to={"/books/" + book._id}>
+                {reslist.map(book => {
+                  let id = "";
+                  id = book.id;
+                  let title = "";
+                  if (book.volumeInfo.title === undefined) {
+                      title = "No Title";
+                  } else {
+                      title = book.volumeInfo.title;
+                  }
+                  let authors = [];
+                  if (book.volumeInfo.authors === undefined) {
+                      authors = ["No Author"];
+                  } else {
+                      authors = book.volumeInfo.authors;
+                  }
+                  let description = "";
+                  if (book.volumeInfo.description) {
+                      description = book.volumeInfo.description;
+                  } else {
+                      description = "No description.";
+                  }
+                  let image = "";
+                  if (book.volumeInfo.imageLinks === undefined) {
+                      image = "https://placehold.it/128x128";
+                  } else {
+                      image = book.volumeInfo.imageLinks.thumbnail;
+                  }
+                  let link = "";
+                  if (book.volumeInfo.previewLink) {
+                      link = book.volumeInfo.previewLink
+                  } else {
+                      link = ""
+                  }
+
+
+                  return (
+                  <ListItem key={book.id}>
+
                       <strong>
-                        {book.title} by {book.author}
+                        {title} by {authors}
                       </strong>
-                    </Link>
-                    <DeleteBtn onClick={() => deleteBook(book._id)} />
+
+                      <h3>Description</h3>
+                      <p>
+                        {description}
+                      </p>
+                     <img src={image} />
+                     {link}
+
                   </ListItem>
-                ))}
+
+
+                )
+
+              })}
               </List>
             ) : (
               <h3>No Results to Display</h3>
@@ -109,7 +126,6 @@ function Search() {
         </Row>
       </Container>
     );
-  }
 
-
+            }
 export default Search;
