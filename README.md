@@ -32,7 +32,7 @@ Table of contents
 
 [Heroku link]()
 
-![!Demo](.\assets\react-reading-demo.gif)
+![!Demo](assets\react-reading-demo.gif)
 
 ## Contributing
 
