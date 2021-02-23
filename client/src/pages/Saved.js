@@ -1,26 +1,73 @@
-import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { Col, Row, Container } from "../components/Grid";
-import Jumbotron from "../components/Jumbotron";
+import React, { useState, useEffect } from "react";
 import API from "../utils/API";
+import { Link } from "react-router-dom";
+import { Col, Row, Container, Card } from "react-bootstrap";
+import { List, ListItem } from "../components/List";
+import { Input, TextArea, FormBtn } from "../components/Form";
 
 function Saved() {
-  const [book, setBook] = useState({})
+  const [books, setBooks] = useState({});
 
-  // When this component mounts, grab the book with the _id of props.match.params.id
-  // e.g. localhost:3000/books/599dcb67f0f16317844583fc
-  const {id} = useParams()
   useEffect(() => {
-    API.getBook(id)
-      .then(res => setBook(res.data))
-      .catch(err => console.log(err));
-  }, [])
+    loadBooks();
+  }, []);
+
+  function loadBooks() {
+    API.getBooks()
+      .then((res) => setBooks(res.data))
+      .catch((err) => console.log(err));
+  }
+
+  function deleteBook(id) {
+    API.deleteBook(id)
+      .then((res) => loadBooks())
+      .catch((err) => console.log(err));
+  }
 
   return (
-    <div></div>
+    <Container fluid>
+      <Row>
+        <Col>
+
+          <br />
+          <Card className="text-center" border="dark">
+            <Card.Body>
+              <h1>Google Book Search</h1>
+            </Card.Body>
+          </Card>
+          <br />
+
+          {books.length ? (
+            <List>
+              {books.map((book) => (
+                <ListItem key={book._id}>
+                  <h3>
+                    {book.title} by {book.authors}
+                  </h3>
+
+                  <strong>Description</strong>
+                  <p>{book.description}</p>
+                  <p>
+                    <img src={book.image} />
+                  </p>
+                  <p>{book.link}</p>
+
+                  <button onClick={() => deleteBook(book._id)}>
+                    Delete Book
+                  </button>
+                </ListItem>
+
+              ))}
+            </List>
+
+          ) : (
+            <h3>No Results to Display</h3>
+
+          )}
+        </Col>
+      </Row>
+    </Container>
   );
-
 }
-
 
 export default Saved;
